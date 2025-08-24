@@ -9,5 +9,5 @@ module Asteroid {
     requires Common;
     requires CommonAsteroid;
     provides IGamePluginService with AsteroidPlugin;
-    provides IEntityProcessingService with AsteroidProcessor, EntityProcessor;
+    provides IEntityProcessingService with AsteroidProcessor;
 }

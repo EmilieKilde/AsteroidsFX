@@ -50,6 +50,7 @@ public class BulletControl implements  IEntityProcessingService, BulletSPI {
         double changeY = Math.sin(Math.toRadians(bullet.getRotation()));
         bullet.setX(bullet.getX() + changeX * 10);
         bullet.setY(bullet.getY() + changeY * 10);
+        bullet.setRadius(1);
         return bullet;
     }
 }
