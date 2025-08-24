@@ -24,7 +24,6 @@ public class CollisionSystem implements IEntityProcessingService {
                     entity.setHitPoints(entity.getHitPoints()-entity1.getDmg());
                     entity1.setHitPoints(entity1.getHitPoints()-entity.getDmg());
 
-                    // Change hitpoints
                     if(entity1.getHitPoints()<1){
                         world.removeEntity(entity1);
                     }
@@ -53,10 +52,6 @@ public class CollisionSystem implements IEntityProcessingService {
         if (result < e1Width+e2Width){
             return true;
         }
-
         return false;
     }
-
-
-
 }
