@@ -7,7 +7,7 @@ import dk.sdu.cbse.common.data.World;
 import dk.sdu.cbse.common.services.IEntityProcessingService;
 
 public class AsteroidProcessor implements IEntityProcessingService {
-    private IAsteroidSplitter asteroidSplitter = new AsteroidSplitterImpl();
+    private IAsteroidSplitter asteroidSplitter = new AsteroidSplitter();
 
     @Override
     public void process(GameData gameData, World world) {
