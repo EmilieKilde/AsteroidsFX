@@ -48,7 +48,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
-        <version>1.6.0</version>
+        <version>3.5.0</version>
         <inherited>false</inherited>
         <executions>
           <execution>
@@ -64,10 +64,12 @@
           <arguments>
             <argument>-Dorg.lwjgl.util.Debug=true</argument>
             <argument>-Djava.library.path=libs</argument>
-            <argument>--module-path=mods-mvn</argument>
-            <argument>--class-path=libs/*</argument>
-            <argument>--module=Core/dk.sdu.mmmi.cbse.main.Main</argument>
-            <argument>--add-modules javafx.graphics</argument>
+            <argument>--module-path</argument>
+            <argument>mods-mvn;libs</argument>
+            <argument>--add-modules</argument>
+            <argument>javafx.controls, javafx.graphics</argument>
+            <argument>--module</argument>
+            <argument>Core/dk.sdu.cbse.main.Main</argument>
           </arguments>
         </configuration>
       </plugin>
