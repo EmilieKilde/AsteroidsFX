@@ -2,9 +2,21 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>dk.sdu.cbse</groupId>
   <artifactId>AsteroidsFX</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>AsteroidsFX</name>
+
+    <modules>
+        <module>Core</module>
+        <module>Common</module>
+        <module>Player</module>
+        <module>Bullet</module>
+        <module>CommonBullet</module>
+        <module>CommonAsteroid</module>
+        <module>Asteroid</module>
+        <module>Collision</module>
+    </modules>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.9</maven.compiler.source>
@@ -36,7 +48,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
-        <version>1.6.0</version>
+        <version>3.5.0</version>
         <inherited>false</inherited>
         <executions>
           <execution>
@@ -52,10 +64,12 @@
           <arguments>
             <argument>-Dorg.lwjgl.util.Debug=true</argument>
             <argument>-Djava.library.path=libs</argument>
-            <argument>--module-path=mods-mvn</argument>
-            <argument>--class-path=libs/*</argument>
-            <argument>--module=Core/dk.sdu.mmmi.cbse.main.Main</argument>
-            <argument>--add-modules javafx.graphics</argument>
+            <argument>--module-path</argument>
+            <argument>mods-mvn;libs</argument>
+            <argument>--add-modules</argument>
+            <argument>javafx.controls, javafx.graphics</argument>
+            <argument>--module</argument>
+            <argument>Core/dk.sdu.cbse.main.Main</argument>
           </arguments>
         </configuration>
       </plugin>
@@ -125,14 +139,5 @@
       </build>
     </profile>
   </profiles>
-  <modules>
-    <module>Core</module>
-    <module>Asteroid</module>
-    <module>Bullet</module>
-    <module>Collision</module>
-    <module>Common</module>
-    <module>CommonBullet</module>
-    <module>Enemy</module>
-    <module>Player</module>
-  </modules>
+
 </project>
