@@ -9,8 +9,6 @@ import dk.sdu.cbse.common.services.IEntityProcessingService;
 import java.util.Random;
 
 public class AsteroidProcessor implements IEntityProcessingService {
-    private IAsteroidSplitter asteroidSplitter = new AsteroidSplitter();
-    private Random random = new Random();
     @Override
     public void process(GameData gameData, World world) {
 
@@ -36,38 +34,9 @@ public class AsteroidProcessor implements IEntityProcessingService {
             if (asteroid.getY() > gameData.getDisplayHeight()) {
                 asteroid.setY(asteroid.getY() % gameData.getDisplayHeight());
             }
-            int randomInt = random.nextInt(50);
-            if (randomInt==1) {
-                createNewAsteroid(gameData, world);
-            }
 
         }
 
     }
-
-    private void createNewAsteroid(GameData gameData, World world) {
-        Entity asteroid = new Asteroid();
-        Random rnd = new Random();
-        int size = rnd.nextInt(10)+5;
-        asteroid.setPolygonCoordinates(size, -size, -size, -size, -size, size, size, size);
-        asteroid.setX(gameData.getDisplayWidth()/2);
-        asteroid.setY(0);
-        //asteroid.setRadius(size);
-        asteroid.setRotation(90);
-        asteroid.setHitPoints(10);
-        asteroid.setDmg(10);
-        //asteroid.add(new LifePart(10, 10));
-
-        world.addEntity(asteroid);
-    }
-
-    public void setAsteroidSplitter(IAsteroidSplitter asteroidSplitter) {
-        this.asteroidSplitter = asteroidSplitter;
-    }
-
-    public void removeAsteroidSplitter(IAsteroidSplitter asteroidSplitter) {
-        this.asteroidSplitter = null;
-    }
-
 
 }
