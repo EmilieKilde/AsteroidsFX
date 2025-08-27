@@ -7,7 +7,7 @@
     <version>1.0.1-SNAPSHOT</version>
   </parent>
 
-    <groupId>dk.sdu.cbse.asteroids</groupId>
+    <groupId>dk.sdu.cbse.core</groupId>
     <artifactId>Core</artifactId>
     <version>1.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
@@ -59,6 +59,7 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
+            <version>6.2.7</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>

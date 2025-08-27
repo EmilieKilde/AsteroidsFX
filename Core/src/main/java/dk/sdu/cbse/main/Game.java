@@ -136,20 +136,27 @@ public class Game {
 
     public void render() {
         new AnimationTimer() {
-            private long lastUpdate = 0;
 
             @Override
             public void handle(long now) {
-                update();
+                try {
+                    update();
+                } catch (IOException | InterruptedException | URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
                 draw();
                 gameData.getKeys().update();
             }
         }.start();
     }
 
-    private void update() {
-        entityProcessors.forEach(processor -> processor.process(gameData, world));
-        postProcessors.forEach(processor -> processor.process(gameData, world));
+    private void update() throws IOException, URISyntaxException, InterruptedException {
+        for (IEntityProcessingService entityProcessorService : entityProcessors) {
+            entityProcessorService.process(gameData, world);
+        }
+        for (IPostEntityProcessingService postEntityProcessorService : postProcessors) {
+            postEntityProcessorService.process(gameData, world);
+        }
     }
 
     private void draw() {

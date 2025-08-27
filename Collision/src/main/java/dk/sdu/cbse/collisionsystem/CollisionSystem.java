@@ -1,59 +1,66 @@
 package dk.sdu.cbse.collisionsystem;
 
 
+import dk.sdu.cbse.common.asteroids.Asteroid;
+import dk.sdu.cbse.common.asteroids.IAsteroidSplitter;
+import dk.sdu.cbse.common.bullet.Bullet;
 import dk.sdu.cbse.common.data.Entity;
 import dk.sdu.cbse.common.data.GameData;
 import dk.sdu.cbse.common.data.World;
 import dk.sdu.cbse.common.services.IEntityProcessingService;
+import dk.sdu.cbse.common.services.IPostEntityProcessingService;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.HashSet;
+import java.util.ServiceLoader;
 import java.util.Set;
 
 import static java.lang.Math.sqrt;
 
-public class CollisionSystem implements IPEntityProcessingService {
+public class CollisionSystem implements IEntityProcessingService {
+    private final IAsteroidSplitter asteroidSplitter = ServiceLoader.load(IAsteroidSplitter.class).findFirst().orElseThrow(()-> new IllegalArgumentException("Can't find IasteroidSplitter"));
+    public CollisionSystem(){
+
+    }
     @Override
-    public void process(GameData gameData, World world) {
+    public void process(GameData gameData, World world) throws URISyntaxException, InterruptedException, IOException {
 
-        Set<String> entitiesToRemove = new HashSet<>();
+        for (Entity entity1 : world.getEntities()) {
+            for (Entity entity2 : world.getEntities()) {
 
+                //Check if the two entities are identical, and skips if they are
+                if (entity1.getID().equals(entity2.getID())) {
+                    continue;
+                }
 
-        Entity[] entities = world.getEntities().toArray(new Entity[0]);
+                if (entity1 instanceof Asteroid && entity2 instanceof Asteroid) {
+                    continue;
+                }
 
-        for (int i = 0; i < entities.length; i++) {
-            Entity entity1 = entities[i];
-            if (entitiesToRemove.contains(entity1.getID())) continue;
-
-            for (int j = i + 1; j < entities.length; j++) {
-                Entity entity2 = entities[j];
-                if (entitiesToRemove.contains(entity2.getID())) continue;
-
+                // The collision detection
                 if (this.collides(entity1, entity2)) {
-
-                    if (isBullet(entity1) || isBullet(entity2)) {
-                        entitiesToRemove.add(entity1.getID());
-                        entitiesToRemove.add(entity2.getID());
+                    System.out.println(entity1.getClass());
+                    System.out.println(entity2.getClass());
+                    if (entity1.getClass().equals(Bullet.class) && entity2.getClass().equals(Asteroid.class)) {
+                        world.removeEntity(entity1);
+                        asteroidSplitter.createSplitAsteroid(entity2, world, gameData);
+                    } else if (entity1.getClass().equals(Asteroid.class) && entity2.getClass().equals(Bullet.class)) {
+                        world.removeEntity(entity2);
+                        asteroidSplitter.createSplitAsteroid(entity1, world, gameData);
+                    } else {
+                        world.removeEntity(entity1);
+                        world.removeEntity(entity2);
                     }
                 }
             }
         }
-
-
-        entitiesToRemove.forEach(world::removeEntity);
-    }
-
-    boolean isBullet(Entity entity) {
-
-        return entity.getRadius() <= 2;
     }
 
     public Boolean collides(Entity entity1, Entity entity2) {
-        float dx = (float) (entity1.getX() - entity2.getX());
-        float dy = (float) (entity1.getY() - entity2.getY());
+        float dx = (float) entity1.getX() - (float) entity2.getX();
+        float dy = (float) entity1.getY() - (float) entity2.getY();
         float distance = (float) Math.sqrt(dx * dx + dy * dy);
-
-
-        float tolerance = 1.1f;
-        return distance < (entity1.getRadius() + entity2.getRadius()) * tolerance;
+        return distance < (entity1.getRadius() + entity2.getRadius());
     }
 }

@@ -32,24 +32,30 @@ import javafx.stage.Stage;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 public class Main extends Application {
+    private AnnotationConfigApplicationContext context;
 
-    public static void main(String[] args) {
-        launch(Main.class);
+    @Override
+    public void init() {
+        context = new AnnotationConfigApplicationContext(ModuleConfig.class);
     }
 
     @Override
     public void start(Stage window) throws Exception {
-
-        AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(ModuleConfig.class);
-
-        for (String beanName : ctx.getBeanDefinitionNames()) {
-            System.out.println(beanName);
+        for (String beanName : context.getBeanDefinitionNames()) {
+            System.out.println("Spring bean: " + beanName);
         }
 
-        Game game = ctx.getBean(Game.class);
+        Game game = context.getBean(Game.class);
         game.start(window);
         game.render();
-
     }
 
+    @Override
+    public void stop() {
+        if (context != null) {
+            context.close();
+        }
+    }
+
+    public static void main(String[] args) { launch(args); }
 }
