@@ -30,7 +30,7 @@ public class ScorePlugin implements IGamePluginService, IScoreSystem{
     public void start(GameData gameData, World world){
         this.playerScoreText = new Text(10, 20, "Score: 0");
         playerScoreText.setFill(Color.WHITE);
-        playerScoreText.setId("Score");
+        playerScoreText.setId("playerScoreText");
         playerScoreText.toFront();
 
         gameData.getGameWindow().getChildren().add(playerScoreText);
