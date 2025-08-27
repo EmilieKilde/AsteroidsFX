@@ -5,9 +5,11 @@ import dk.sdu.cbse.common.services.IEntityProcessingService;
 import dk.sdu.cbse.common.services.IGamePluginService;
 
 module Asteroid {
+    uses dk.sdu.cbse.common.score.IScoreSystem;
     exports dk.sdu.cbse.asteroid;
     requires Common;
     requires CommonAsteroid;
+    requires CommonScore;
     provides IGamePluginService with AsteroidPlugin;
     provides IEntityProcessingService with AsteroidProcessor;
 }

@@ -16,18 +16,13 @@ public class Entity implements Serializable {
     private float radius;
 
     private int dmg;
-
+    private String color;
 
 
     public String getID() {
         return ID.toString();
     }
 
-    public double getWidth(){
-        double[] coordinates = getPolygonCoordinates();
-        Double max = Arrays.stream(coordinates).max().orElse(-1);
-        return max*2;
-    }
 
     public void setPolygonCoordinates(double... coordinates ) {
         this.polygonCoordinates = coordinates;
@@ -87,6 +82,11 @@ public class Entity implements Serializable {
 
     public int getDmg() {
         return dmg;
+    }
+    public void setColor(String color){this.color=color;}
+
+    public String getColor() {
+        return color;
     }
 
     @Override

@@ -18,12 +18,14 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 public class Game {
-    private final GameData gameData;
-    private final World world;
+    private final GameData gameData = new GameData();
+    private final World world = new World();
     private final Map<Entity, Polygon> polygons = new ConcurrentHashMap<>();
     private final Pane gameWindow = new Pane();
     private final List<IGamePluginService> gamePlugins;
@@ -38,8 +40,6 @@ public class Game {
                 List<IGamePluginService> gamePlugins,
                 List<IEntityProcessingService> entityProcessors,
                 List<IPostEntityProcessingService> postProcessors) {
-        this.gameData = gameData;
-        this.world = world;
         this.gamePlugins = gamePlugins;
         this.entityProcessors = entityProcessors;
         this.postProcessors = postProcessors;
@@ -140,14 +140,6 @@ public class Game {
 
             @Override
             public void handle(long now) {
-                gameData.setTime(now / 1_000_000_000.0);
-
-                if (lastUpdate != 0) {
-                    double delta = (now - lastUpdate) / 1_000_000_000.0;
-                    gameData.setDeltaTime(delta);
-                }
-                lastUpdate = now;
-
                 update();
                 draw();
                 gameData.getKeys().update();

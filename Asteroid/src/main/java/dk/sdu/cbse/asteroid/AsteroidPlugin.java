@@ -17,6 +17,7 @@ public class AsteroidPlugin implements IGamePluginService {
         Random random = new Random();
         for (int i=0; i<random.nextInt(2,15); i++) {
             Entity asteroid = createAsteroid(gameData);
+            asteroid.setHitPoints(random.nextInt(2,4));
             world.addEntity(asteroid);
         }
     }
@@ -31,7 +32,7 @@ public class AsteroidPlugin implements IGamePluginService {
         asteroid.setY(rnd.nextInt(0,gameData.getDisplayHeight()));
         asteroid.setRadius(size);
         asteroid.setRotation(rnd.nextInt(90));
-        asteroid.setHitPoints(10);
+        asteroid.setHitPoints(rnd.nextInt(1,4));
         asteroid.setDmg(10);
         //asteroid.add(new LifePart(10, 10));
 

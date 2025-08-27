@@ -11,7 +11,7 @@ import java.util.Set;
 
 import static java.lang.Math.sqrt;
 
-public class CollisionSystem implements IEntityProcessingService {
+public class CollisionSystem implements IPEntityProcessingService {
     @Override
     public void process(GameData gameData, World world) {
 
