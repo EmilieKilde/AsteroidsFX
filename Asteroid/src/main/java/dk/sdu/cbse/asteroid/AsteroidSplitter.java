@@ -5,7 +5,7 @@ import dk.sdu.cbse.common.asteroids.IAsteroidSplitter;
 import dk.sdu.cbse.common.data.Entity;
 import dk.sdu.cbse.common.data.GameData;
 import dk.sdu.cbse.common.data.World;
-import dk.sdu.cbse.common.score.IScoreSystem;
+
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -13,59 +13,53 @@ import java.util.Random;
 import java.util.ServiceLoader;
 
 public class AsteroidSplitter implements IAsteroidSplitter {
+    private Random random = new Random();
     @Override
-    public void createSplitAsteroid(Entity e, World world, GameData gameData) throws IOException, URISyntaxException, InterruptedException{
-        if (e.getHitPoints()==1){
-            if(e.getPolygonCoordinates()[0]<=8){
-                world.removeEntity(e);
-                //score impl here
-                if (getScoreImp() != null){
-                    getScoreImp().addScore(5);
-                    getScoreImp().updateScore(gameData);
-                }
+    public void createSplitAsteroid(Entity destroyedAsteroids, World world, GameData gameData) throws IOException, URISyntaxException, InterruptedException{
+        double currentWidth = destroyedAsteroids.getWidth();
 
-            } else{
-                Asteroid splitAsteroid = initSplit(e);
-                splitAsteroid.setX(e.getX()-splitAsteroid.getRadius()-1);
-                splitAsteroid.setY(e.getY()-splitAsteroid.getRadius()-1);
+        // Only split if the asteroid is large enough (width > 10)
+        if (currentWidth > 10) {
+            // Create 2-3 smaller asteroids
+            int numFragments = 2 + random.nextInt(2); // 2 or 3 fragments
 
-                world.addEntity(splitAsteroid);
-                world.removeEntity(e);
-
-                //Score impl
-                if(getScoreImp() != null){
-                    getScoreImp().addScore(10);
-                    getScoreImp().updateScore(gameData);
-                }
+            for (int i = 0; i < numFragments; i++) {
+                Entity fragment = createFragment(destroyedAsteroids, currentWidth);
+                world.addEntity(fragment);
             }
-        } else {
-            e.setHitPoints(e.getHitPoints()-1);
         }
-
-
-        }
-    private Asteroid initSplit(Entity e) {
-        Asteroid asteroid = new Asteroid();
-        Random rnd = new Random();
-
-        double[] splitAsteroid = e.getPolygonCoordinates();
-        for(int i = 0; i<e.getPolygonCoordinates().length; i++){
-            e.getPolygonCoordinates()[i]=e.getPolygonCoordinates()[i]*0.7;
-        }
-        asteroid.setPolygonCoordinates(splitAsteroid);
-        asteroid.setRadius((float) splitAsteroid[0]);
-
-        asteroid.setRotation(rnd.nextInt(90));
-        asteroid.setHitPoints(rnd.nextInt(2, 4));
-
-        return asteroid;
     }
-    public IScoreSystem getScoreImp(){
-        if(ServiceLoader.load(IScoreSystem.class).stream().map(ServiceLoader.Provider::get).findFirst().isPresent()){
-            return ServiceLoader.load(IScoreSystem.class).stream().map(ServiceLoader.Provider::get).findFirst().get();
 
-        } else{
-            return null;
+    private Entity createFragment(Entity originalAsteroid, double originalWidth) {
+        Asteroid fragment = new Asteroid();
+
+        // Position near the original asteroid with some random offset
+        double offsetX = (random.nextDouble() - 0.5) * 20; // Random offset -10 to +10
+        double offsetY = (random.nextDouble() - 0.5) * 20;
+
+        fragment.setX(originalAsteroid.getX() + offsetX);
+        fragment.setY(originalAsteroid.getY() + offsetY);
+
+        // Random rotation
+        fragment.setRotation(random.nextInt(360));
+
+        // Determine fragment size based on original size
+        if (originalWidth > 30) {
+            // Large asteroid -> medium fragments
+            fragment.setPolygonCoordinates(10, 0, 7, 7, 0, 10, -7, 7, -10, 0, -7, -7, 0, -10, 7, -7);
+            fragment.setHitPoints(5);
+        } else if (originalWidth > 15) {
+            // Medium asteroid -> small fragments
+            fragment.setPolygonCoordinates(5, 0, 3, 3, 0, 5, -3, 3, -5, 0, -3, -3, 0, -5, 3, -3);
+            fragment.setHitPoints(2);
+        } else {
+            // Small asteroid -> tiny fragments
+            fragment.setPolygonCoordinates(3, 0, 2, 2, 0, 3, -2, 2, -3, 0, -2, -2, 0, -3, 2, -2);
+            fragment.setHitPoints(1);
         }
+
+        fragment.setDmg(5); // Fragments do less damage
+
+        return fragment;
     }
 }

@@ -14,35 +14,45 @@ public class AsteroidPlugin implements IGamePluginService {
 
     @Override
     public void start(GameData gameData, World world) {
+        createInitialAsteroids(gameData, world);
+    }
+
+    private void createInitialAsteroids(GameData gameData, World world) {
         Random random = new Random();
-        for (int i=0; i<random.nextInt(2,15); i++) {
-            Entity asteroid = createAsteroid(gameData);
-            asteroid.setHitPoints(random.nextInt(2,4));
+
+        // Create 3-5 initial asteroids
+        int numAsteroids = 3 + random.nextInt(3);
+
+        for (int i = 0; i < numAsteroids; i++) {
+            Entity asteroid = new Asteroid();
+
+            // Large asteroid coordinates
+            asteroid.setPolygonCoordinates(20, 0, 14, 14, 0, 20, -14, 14, -20, 0, -14, -14, 0, -20, 14, -14);
+
+            // Random position on the edges of the screen
+            if (random.nextBoolean()) {
+                // Left or right edge
+                asteroid.setX(random.nextBoolean() ? 0 : gameData.getDisplayWidth());
+                asteroid.setY(random.nextInt(gameData.getDisplayHeight()));
+            } else {
+                // Top or bottom edge
+                asteroid.setX(random.nextInt(gameData.getDisplayWidth()));
+                asteroid.setY(random.nextBoolean() ? 0 : gameData.getDisplayHeight());
+            }
+
+            asteroid.setRotation(random.nextInt(360));
+            asteroid.setHitPoints(10);
+            asteroid.setDmg(10);
+
             world.addEntity(asteroid);
         }
     }
 
-    private Entity createAsteroid(GameData gameData) {
-
-        Entity asteroid = new Asteroid();
-        Random rnd = new Random();
-        int size = rnd.nextInt(10)+5;
-        asteroid.setPolygonCoordinates(size, -size, -size, -size, -size, size, size, size);
-        asteroid.setX(rnd.nextInt(0,gameData.getDisplayWidth()));
-        asteroid.setY(rnd.nextInt(0,gameData.getDisplayHeight()));
-        asteroid.setRadius(size);
-        asteroid.setRotation(rnd.nextInt(90));
-        asteroid.setHitPoints(rnd.nextInt(1,4));
-        //asteroid.add(new LifePart(10, 10));
-
-        return asteroid;
-    }
-
     @Override
     public void stop(GameData gameData, World world) {
-        for (Entity asteroid : world.getEntities()) {
-            if (asteroid.getClass() == Asteroid.class) {
-                world.removeEntity(asteroid);
+        for (Entity e : world.getEntities()) {
+            if (e.getClass() == Asteroid.class) {
+                world.removeEntity(e);
             }
         }
     }

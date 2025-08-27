@@ -9,7 +9,8 @@ import dk.sdu.cbse.common.services.IEntityProcessingService;
 import java.util.Random;
 
 public class AsteroidProcessor implements IEntityProcessingService {
-    private IAsteroidSplitter asteroidSplitter1 = new AsteroidSplitter();
+    private IAsteroidSplitter asteroidSplitter = new AsteroidSplitter();
+
     @Override
     public void process(GameData gameData, World world) {
 
@@ -17,33 +18,35 @@ public class AsteroidProcessor implements IEntityProcessingService {
             double changeX = Math.cos(Math.toRadians(asteroid.getRotation()));
             double changeY = Math.sin(Math.toRadians(asteroid.getRotation()));
 
-            asteroid.setX(asteroid.getX() + changeX * 0.5);
-            asteroid.setY(asteroid.getY() + changeY * 0.5);
+            // Slower movement for better gameplay
+            asteroid.setX(asteroid.getX() + changeX * 1.0);
+            asteroid.setY(asteroid.getY() + changeY * 1.0);
 
+            // Wrap around screen edges
             if (asteroid.getX() < 0) {
-                asteroid.setX(asteroid.getX() - gameData.getDisplayWidth());
+                asteroid.setX(asteroid.getX() + gameData.getDisplayWidth());
             }
 
             if (asteroid.getX() > gameData.getDisplayWidth()) {
-                asteroid.setX(asteroid.getX() % gameData.getDisplayWidth());
+                asteroid.setX(asteroid.getX() - gameData.getDisplayWidth());
             }
 
             if (asteroid.getY() < 0) {
-                asteroid.setY(asteroid.getY() - gameData.getDisplayHeight());
+                asteroid.setY(asteroid.getY() + gameData.getDisplayHeight());
             }
 
             if (asteroid.getY() > gameData.getDisplayHeight()) {
-                asteroid.setY(asteroid.getY() % gameData.getDisplayHeight());
+                asteroid.setY(asteroid.getY() - gameData.getDisplayHeight());
             }
-
         }
-
-    }
-    public void setAsteroidSplitter(IAsteroidSplitter asteroidSplitter1){
-        this.asteroidSplitter1 = asteroidSplitter1;
-    }
-    public void removeAsteroidSplitter(IAsteroidSplitter asteroidSplitter1){
-        this.asteroidSplitter1=null;
     }
 
+    public void setAsteroidSplitter(IAsteroidSplitter asteroidSplitter) {
+        this.asteroidSplitter = asteroidSplitter;
+    }
+
+    public void removeAsteroidSplitter(IAsteroidSplitter asteroidSplitter) {
+        this.asteroidSplitter = null;
+    }
 }
+
