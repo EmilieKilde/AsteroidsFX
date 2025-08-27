@@ -15,8 +15,9 @@ public class ScoreSystem {
     }
 
     @PutMapping("/addPoint")
-    public void scoreCalc(@RequestParam(value="points", defaultValue="0") int points){
+    public int scoreCalc(@RequestParam(value="points") int points){
         pScore += points;
+        return pScore;
     }
     @GetMapping("/getScore")
     public int getpScore(){

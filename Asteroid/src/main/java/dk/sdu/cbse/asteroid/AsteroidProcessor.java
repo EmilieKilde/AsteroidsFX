@@ -9,6 +9,7 @@ import dk.sdu.cbse.common.services.IEntityProcessingService;
 import java.util.Random;
 
 public class AsteroidProcessor implements IEntityProcessingService {
+    private IAsteroidSplitter asteroidSplitter1 = new AsteroidSplitter();
     @Override
     public void process(GameData gameData, World world) {
 
@@ -37,6 +38,12 @@ public class AsteroidProcessor implements IEntityProcessingService {
 
         }
 
+    }
+    public void setAsteroidSplitter(IAsteroidSplitter asteroidSplitter1){
+        this.asteroidSplitter1 = asteroidSplitter1;
+    }
+    public void removeAsteroidSplitter(IAsteroidSplitter asteroidSplitter1){
+        this.asteroidSplitter1=null;
     }
 
 }

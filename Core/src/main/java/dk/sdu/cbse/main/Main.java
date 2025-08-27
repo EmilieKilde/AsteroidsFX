@@ -7,20 +7,13 @@ import dk.sdu.cbse.common.data.World;
 import dk.sdu.cbse.common.services.IEntityProcessingService;
 import dk.sdu.cbse.common.services.IGamePluginService;
 import dk.sdu.cbse.common.services.IPostEntityProcessingService;
-import java.lang.module.ModuleReference;
-import java.lang.module.Configuration;
-import java.lang.module.ModuleFinder;
-import java.lang.module.ModuleDescriptor;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.ServiceLoader.Provider;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toList;
-
 import dk.sdu.cbse.common.util.ServiceLocator;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -29,33 +22,157 @@ import javafx.scene.layout.Pane;
 import javafx.scene.shape.Polygon;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ComponentScan;
+
+@Configuration
+@ComponentScan(basePackages = "dk.sdu.cbse")
 public class Main extends Application {
-    private AnnotationConfigApplicationContext context;
+    private final GameData gameData = new GameData();
+    private final World world = new World();
+    private final Map<Entity, Polygon> polygons = new ConcurrentHashMap<>();
+    private final Pane gameWindow = new Pane();
+    private AnnotationConfigApplicationContext springContext;
+
+    public static void main(String[] args) {
+        launch(Main.class);
+    }
 
     @Override
-    public void init() {
-        context = new AnnotationConfigApplicationContext(ModuleConfig.class);
+    public void init() throws Exception {
+        super.init();
+        // Initialize Spring context
+        try {
+            springContext = new AnnotationConfigApplicationContext();
+            springContext.register(Main.class);
+            springContext.refresh();
+
+            System.out.println("Spring context initialized successfully");
+        } catch (Exception e) {
+            System.err.println("Failed to initialize Spring context: " + e.getMessage());
+            e.printStackTrace();
+            // Fall back to ServiceLocator if Spring fails
+        }
     }
 
     @Override
     public void start(Stage window) throws Exception {
-        for (String beanName : context.getBeanDefinitionNames()) {
-            System.out.println("Spring bean: " + beanName);
+        Text text = new Text(10, 20, "Points: 0");
+        gameWindow.setPrefSize(gameData.getDisplayWidth(), gameData.getDisplayHeight());
+        gameWindow.getChildren().add(text);
+
+        Scene scene = new Scene(gameWindow);
+        scene.setOnKeyPressed(event -> {
+            if (event.getCode().equals(KeyCode.LEFT)) {
+                gameData.getKeys().setKey(GameKeys.LEFT, true);
+            }
+            if (event.getCode().equals(KeyCode.RIGHT)) {
+                gameData.getKeys().setKey(GameKeys.RIGHT, true);
+            }
+            if (event.getCode().equals(KeyCode.UP)) {
+                gameData.getKeys().setKey(GameKeys.UP, true);
+            }
+            if (event.getCode().equals(KeyCode.SPACE)) {
+                gameData.getKeys().setKey(GameKeys.SPACE, true);
+            }
+        });
+        scene.setOnKeyReleased(event -> {
+            if (event.getCode().equals(KeyCode.LEFT)) {
+                gameData.getKeys().setKey(GameKeys.LEFT, false);
+            }
+            if (event.getCode().equals(KeyCode.RIGHT)) {
+                gameData.getKeys().setKey(GameKeys.RIGHT, false);
+            }
+            if (event.getCode().equals(KeyCode.UP)) {
+                gameData.getKeys().setKey(GameKeys.UP, false);
+            }
+            if (event.getCode().equals(KeyCode.SPACE)) {
+                gameData.getKeys().setKey(GameKeys.SPACE, false);
+            }
+        });
+
+        // Lookup all Game Plugins using ServiceLoader (keeping existing approach)
+        for (IGamePluginService iGamePlugin : getPluginServices()) {
+            iGamePlugin.start(gameData, world);
         }
 
-        Game game = context.getBean(Game.class);
-        game.start(window);
-        game.render();
+        for (Entity entity : world.getEntities()) {
+            Polygon polygon = new Polygon(entity.getPolygonCoordinates());
+            polygons.put(entity, polygon);
+            gameWindow.getChildren().add(polygon);
+        }
+
+        render();
+        window.setScene(scene);
+        window.setTitle("ASTEROIDS");
+        window.show();
     }
 
     @Override
-    public void stop() {
-        if (context != null) {
-            context.close();
+    public void stop() throws Exception {
+        if (springContext != null) {
+            springContext.close();
+        }
+        super.stop();
+    }
+
+    private void render() {
+        new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                try {
+                    update();
+                } catch (IOException | InterruptedException | URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
+                draw();
+                gameData.getKeys().update();
+            }
+        }.start();
+    }
+
+    private void update() throws IOException, URISyntaxException, InterruptedException {
+        for (IEntityProcessingService entityProcessorService : getEntityProcessingServices()) {
+            entityProcessorService.process(gameData, world);
+        }
+        for (IPostEntityProcessingService postEntityProcessorService : getPostEntityProcessingServices()) {
+            postEntityProcessorService.process(gameData, world);
         }
     }
 
-    public static void main(String[] args) { launch(args); }
+    private void draw() {
+        for (Entity polygonEntity : polygons.keySet()) {
+            if (!world.getEntities().contains(polygonEntity)) {
+                Polygon removedPolygon = polygons.get(polygonEntity);
+                polygons.remove(polygonEntity);
+                gameWindow.getChildren().remove(removedPolygon);
+            }
+        }
+
+        for (Entity entity : world.getEntities()) {
+            Polygon polygon = polygons.get(entity);
+            if (polygon == null) {
+                polygon = new Polygon(entity.getPolygonCoordinates());
+                polygons.put(entity, polygon);
+                gameWindow.getChildren().add(polygon);
+            }
+            polygon.setTranslateX(entity.getX());
+            polygon.setTranslateY(entity.getY());
+            polygon.setRotate(entity.getRotation());
+        }
+    }
+
+    private Collection<? extends IGamePluginService> getPluginServices() {
+        return ServiceLocator.INSTANCE.locateAll(IGamePluginService.class);
+    }
+
+    private Collection<? extends IEntityProcessingService> getEntityProcessingServices() {
+        return ServiceLocator.INSTANCE.locateAll(IEntityProcessingService.class);
+    }
+
+    private Collection<? extends IPostEntityProcessingService> getPostEntityProcessingServices() {
+        return ServiceLocator.INSTANCE.locateAll(IPostEntityProcessingService.class);
+    }
 }

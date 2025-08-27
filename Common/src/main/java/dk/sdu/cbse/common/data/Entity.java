@@ -41,7 +41,11 @@ public class Entity implements Serializable {
         return x;
     }
 
-
+public double getWidth(){
+    double[] coordinates = getPolygonCoordinates();
+    Double max = Arrays.stream(coordinates).max().orElse(-1);
+    return max*2;
+}
     public void setY(double y) {
         this.y = y;
     }
