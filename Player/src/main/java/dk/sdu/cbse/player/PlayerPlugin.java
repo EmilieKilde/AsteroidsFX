@@ -13,6 +13,7 @@ public class PlayerPlugin implements IGamePluginService {
 
         // Add entities to the world
         player = createPlayerShip(gameData);
+        player.setColor("BLUE");
         world.addEntity(player);
     }
 
@@ -22,8 +23,7 @@ public class PlayerPlugin implements IGamePluginService {
         playerShip.setPolygonCoordinates(-5,-5,10,0,-5,5);
         playerShip.setX(gameData.getDisplayHeight()/2);
         playerShip.setY(gameData.getDisplayWidth()/2);
-        playerShip.setHitPoints(5);
-        playerShip.setDmg(10);
+        playerShip.setRadius(8);
         return playerShip;
     }
 

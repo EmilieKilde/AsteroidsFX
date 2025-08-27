@@ -13,20 +13,16 @@ public class Entity implements Serializable {
     private double y;
     private double rotation;
     private int hitPoints;
+    private float radius;
 
     private int dmg;
-
+    private String color;
 
 
     public String getID() {
         return ID.toString();
     }
 
-    public double getWidth(){
-        double[] coordinates = getPolygonCoordinates();
-        Double max = Arrays.stream(coordinates).max().orElse(-1);
-        return max*2;
-    }
 
     public void setPolygonCoordinates(double... coordinates ) {
         this.polygonCoordinates = coordinates;
@@ -45,7 +41,11 @@ public class Entity implements Serializable {
         return x;
     }
 
-
+public double getWidth(){
+    double[] coordinates = getPolygonCoordinates();
+    Double max = Arrays.stream(coordinates).max().orElse(-1);
+    return max*2;
+}
     public void setY(double y) {
         this.y = y;
     }
@@ -66,7 +66,13 @@ public class Entity implements Serializable {
     public void setHitPoints(int hitPoints) {
         this.hitPoints = hitPoints;
     }
+    public void setRadius(float radius) {
+        this.radius = radius;
+    }
 
+    public float getRadius() {
+        return this.radius;
+    }
 
     public int getHitPoints() {
         return hitPoints;
@@ -81,8 +87,24 @@ public class Entity implements Serializable {
     public int getDmg() {
         return dmg;
     }
+    public void setColor(String color){this.color=color;}
 
+    public String getColor() {
+        return color;
+    }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Entity entity = (Entity) obj;
+        return ID.equals(entity.ID);
+    }
+
+    @Override
+    public int hashCode() {
+        return ID.hashCode();
+    }
 
 
 

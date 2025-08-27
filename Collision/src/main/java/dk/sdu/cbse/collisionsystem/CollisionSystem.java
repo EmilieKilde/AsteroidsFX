@@ -1,57 +1,103 @@
 package dk.sdu.cbse.collisionsystem;
 
-
+import dk.sdu.cbse.common.asteroids.Asteroid;
+import dk.sdu.cbse.common.asteroids.IAsteroidSplitter;
+import dk.sdu.cbse.common.bullet.Bullet;
 import dk.sdu.cbse.common.data.Entity;
 import dk.sdu.cbse.common.data.GameData;
 import dk.sdu.cbse.common.data.World;
 import dk.sdu.cbse.common.services.IEntityProcessingService;
+import dk.sdu.cbse.common.services.IPostEntityProcessingService;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ServiceLoader;
 
 import static java.lang.Math.sqrt;
 
-public class CollisionSystem implements IEntityProcessingService {
+public class CollisionSystem implements IPostEntityProcessingService, IEntityProcessingService {
+    private static int destroyedAsteroids = 0;
+
     @Override
-    public void process(GameData gameData, World world) {
+    public void process(GameData gameData, World world) throws IOException, URISyntaxException, InterruptedException {
+        List<Entity> entitiesToRemove = new ArrayList<>();
 
-        for (Entity entity:world.getEntities()) {
-            for (Entity entity1:world.getEntities()){
-                if(isCollision(entity, entity1) && entity.getClass() != entity1.getClass()){
-                    System.out.println(entity.getClass());
-                    System.out.println(entity1.getClass());
-                    System.out.println("Asteroids : " + entity.getWidth() + " Bullet : " + entity1.getWidth());
 
-                    System.out.println(entity.getDmg());
-                    System.out.println(entity1.getDmg());
-                    entity.setHitPoints(entity.getHitPoints()-entity1.getDmg());
-                    entity1.setHitPoints(entity1.getHitPoints()-entity.getDmg());
+        for (Entity entity1 : world.getEntities()) {
+            for (Entity entity2 : world.getEntities()) {
 
-                    if(entity1.getHitPoints()<1){
-                        world.removeEntity(entity1);
+                if (entity1.equals(entity2) ||
+                        entitiesToRemove.contains(entity1) ||
+                        entitiesToRemove.contains(entity2)) {
+                    continue;
+                }
+
+
+                if (isCollision(entity1, entity2) && !entity1.getClass().equals(entity2.getClass())) {
+
+                    // Apply damage
+                    entity1.setHitPoints(entity1.getHitPoints() - entity2.getDmg());
+                    entity2.setHitPoints(entity2.getHitPoints() - entity1.getDmg());
+
+                    // Check if entities should be destroyed
+                    if (entity1.getHitPoints() <= 0 && !entitiesToRemove.contains(entity1)) {
+                        entitiesToRemove.add(entity1);
+
+                        // If it's an asteroid being destroyed, try to split it and count points
+                        if (entity1 instanceof Asteroid) {
+                            handleAsteroidDestruction(entity1, world, gameData);
+                            destroyedAsteroids++;
+                        }
                     }
 
-                    if(entity.getHitPoints()<1){
-                        world.removeEntity(entity);
+                    if (entity2.getHitPoints() <= 0 && !entitiesToRemove.contains(entity2)) {
+                        entitiesToRemove.add(entity2);
+
+                        // If it's an asteroid being destroyed, try to split it and count points
+                        if (entity2 instanceof Asteroid) {
+                            handleAsteroidDestruction(entity2, world, gameData);
+                            destroyedAsteroids++;
+                        }
                     }
                 }
             }
         }
+
+        // Remove all entities marked for destruction
+        for (Entity entity : entitiesToRemove) {
+            world.removeEntity(entity);
+        }
     }
 
-    public boolean isCollision(Entity e1, Entity e2){
+    private void handleAsteroidDestruction(Entity asteroid, World world, GameData gameData) throws IOException, URISyntaxException, InterruptedException {
+        // Try to find an asteroid splitter service and use it
+        ServiceLoader<IAsteroidSplitter> splitterLoader = ServiceLoader.load(IAsteroidSplitter.class);
+        for (IAsteroidSplitter splitter : splitterLoader) {
+            splitter.createSplitAsteroid(asteroid, world, gameData);
+            break; // Use the first available splitter
+        }
+    }
 
+    public boolean isCollision(Entity e1, Entity e2) {
         double x1 = e1.getX();
         double y1 = e1.getY();
-
         double x2 = e2.getX();
         double y2 = e2.getY();
 
-        double result = sqrt(((x1-x2)*(x1-x2))+((y1-y2)*(y1-y2)));
-        double e1Width = e1.getWidth()/2;
-        double e2Width = e2.getWidth()/2;
+        double distance = sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+        double e1Radius = e1.getWidth() / 2;
+        double e2Radius = e2.getWidth() / 2;
 
+        return distance < (e1Radius + e2Radius);
+    }
 
-        if (result < e1Width+e2Width){
-            return true;
-        }
-        return false;
+    public static int getDestroyedAsteroids() {
+        return destroyedAsteroids;
+    }
+
+    public static void resetDestroyedAsteroids() {
+        destroyedAsteroids = 0;
     }
 }

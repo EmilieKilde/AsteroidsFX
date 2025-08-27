@@ -7,20 +7,13 @@ import dk.sdu.cbse.common.data.World;
 import dk.sdu.cbse.common.services.IEntityProcessingService;
 import dk.sdu.cbse.common.services.IGamePluginService;
 import dk.sdu.cbse.common.services.IPostEntityProcessingService;
-import java.lang.module.ModuleReference;
-import java.lang.module.Configuration;
-import java.lang.module.ModuleFinder;
-import java.lang.module.ModuleDescriptor;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.ServiceLoader.Provider;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toList;
-
 import dk.sdu.cbse.common.util.ServiceLocator;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -30,20 +23,43 @@ import javafx.scene.shape.Polygon;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-public class Main extends Application {
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ComponentScan;
 
+@Configuration
+@ComponentScan(basePackages = "dk.sdu.cbse")
+public class Main extends Application {
     private final GameData gameData = new GameData();
     private final World world = new World();
     private final Map<Entity, Polygon> polygons = new ConcurrentHashMap<>();
     private final Pane gameWindow = new Pane();
+    private AnnotationConfigApplicationContext springContext;
 
     public static void main(String[] args) {
         launch(Main.class);
     }
 
     @Override
+    public void init() throws Exception {
+        super.init();
+        // Initialize Spring context
+        try {
+            springContext = new AnnotationConfigApplicationContext();
+            springContext.register(Main.class);
+            springContext.refresh();
+
+            System.out.println("Spring context initialized successfully");
+        } catch (Exception e) {
+            System.err.println("Failed to initialize Spring context: " + e.getMessage());
+            e.printStackTrace();
+            // Fall back to ServiceLocator if Spring fails
+        }
+    }
+
+    @Override
     public void start(Stage window) throws Exception {
-        Text text = new Text(10, 20, "Destroyed asteroids: 0");
+        Text text = new Text(10, 20, "Points: 0");
         gameWindow.setPrefSize(gameData.getDisplayWidth(), gameData.getDisplayHeight());
         gameWindow.getChildren().add(text);
 
@@ -75,37 +91,49 @@ public class Main extends Application {
             if (event.getCode().equals(KeyCode.SPACE)) {
                 gameData.getKeys().setKey(GameKeys.SPACE, false);
             }
-
         });
 
-        // Lookup all Game Plugins using ServiceLoader
+        // Lookup all Game Plugins using ServiceLoader (keeping existing approach)
         for (IGamePluginService iGamePlugin : getPluginServices()) {
             iGamePlugin.start(gameData, world);
         }
+
         for (Entity entity : world.getEntities()) {
             Polygon polygon = new Polygon(entity.getPolygonCoordinates());
             polygons.put(entity, polygon);
             gameWindow.getChildren().add(polygon);
         }
+
         render();
         window.setScene(scene);
         window.setTitle("ASTEROIDS");
         window.show();
     }
 
+    @Override
+    public void stop() throws Exception {
+        if (springContext != null) {
+            springContext.close();
+        }
+        super.stop();
+    }
+
     private void render() {
         new AnimationTimer() {
             @Override
             public void handle(long now) {
-                update();
+                try {
+                    update();
+                } catch (IOException | InterruptedException | URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
                 draw();
                 gameData.getKeys().update();
             }
-
         }.start();
     }
 
-    private void update() {
+    private void update() throws IOException, URISyntaxException, InterruptedException {
         for (IEntityProcessingService entityProcessorService : getEntityProcessingServices()) {
             entityProcessorService.process(gameData, world);
         }
@@ -134,7 +162,6 @@ public class Main extends Application {
             polygon.setTranslateY(entity.getY());
             polygon.setRotate(entity.getRotation());
         }
-
     }
 
     private Collection<? extends IGamePluginService> getPluginServices() {
@@ -148,5 +175,4 @@ public class Main extends Application {
     private Collection<? extends IPostEntityProcessingService> getPostEntityProcessingServices() {
         return ServiceLocator.INSTANCE.locateAll(IPostEntityProcessingService.class);
     }
-
 }
