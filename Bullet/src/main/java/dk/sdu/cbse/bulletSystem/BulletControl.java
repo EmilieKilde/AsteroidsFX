@@ -36,7 +36,7 @@ public class BulletControl implements  IEntityProcessingService, BulletSPI {
             }
         }
     }
-
+//creating bullet with Bullet class
     @Override
     public Entity createBullet(Entity shooter, GameData gameData) {
         Entity bullet = new Bullet();
