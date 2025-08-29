@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
+//spring
 @Configuration
 public class ModuleConfig {
 
